@@ -78,6 +78,9 @@ export async function signTransaction(xdr: string): Promise<string> {
       network: 'TESTNET',
       networkPassphrase: 'Test SDF Network ; September 2015',
     });
+    if (!signedXdr) {
+      throw new Error('Transaction signing failed or was rejected.');
+    }
     return signedXdr;
   } catch (error) {
     if (error instanceof Error) throw error;
@@ -94,7 +97,8 @@ export async function isConnected(): Promise<boolean> {
   if (!isFreighterInstalled()) return false;
 
   try {
-    return await window.freighter?.isConnected();
+    const connected = await window.freighter?.isConnected();
+    return !!connected;
   } catch {
     return false;
   }
@@ -113,6 +117,10 @@ export async function getNetworkDetails(): Promise<{
   }
 
   const details = await window.freighter?.getNetworkDetails();
+  if (!details) {
+    throw new Error('Could not retrieve network details from Freighter.');
+  }
+
   return {
     network: details.network,
     networkPassphrase: details.networkPassphrase,
