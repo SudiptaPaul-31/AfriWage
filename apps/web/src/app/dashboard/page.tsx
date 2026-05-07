@@ -11,7 +11,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { SendPaymentForm } from '@/components/SendPaymentForm';
 import { TransactionHistory } from '@/components/TransactionHistory';
@@ -47,7 +46,6 @@ function BalanceCard({
 }
 
 export default function DashboardPage() {
-  const _router = useRouter();
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [balance, setBalance] = useState<Balance | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
