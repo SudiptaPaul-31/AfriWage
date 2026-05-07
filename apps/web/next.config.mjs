@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   transpilePackages: ['@remitchain/sdk'],
   webpack: (config) => {
     // Stellar SDK uses Node.js built-ins that need to be polyfilled for browser
