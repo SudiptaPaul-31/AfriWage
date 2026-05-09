@@ -13,10 +13,18 @@ interface Transaction {
   explorerUrl: string;
 }
 
-interface TransactionsResponse {
-  transactions: Transaction[];
-  nextCursor: string | null;
-  total: number;
+interface HorizonPayment {
+  id: string;
+  source_account: string;
+  amount: string;
+  asset_type: string;
+  asset_code?: string;
+  to: string;
+  from: string;
+  memo?: string;
+  transaction_hash: string;
+  created_at: string;
+  paging_token: string;
 }
 
 export async function GET(
@@ -53,9 +61,9 @@ export async function GET(
     }
 
     const data = await response.json();
-    const records = data._embedded.records;
+    const records: HorizonPayment[] = data._embedded.records;
 
-    const transformedTransactions: Transaction[] = records.map((record: any) => {
+    const transformedTransactions: Transaction[] = records.map((record) => {
       const isSent = record.source_account === address;
       
       return {

@@ -9,12 +9,6 @@ interface AccountResponse {
   updatedAt: string;
 }
 
-interface InactiveResponse {
-  isActive: false;
-  xlmBalance: string;
-  usdcBalance: string;
-}
-
 export async function GET(
   _request: Request,
   { params }: { params: { address: string } }
@@ -50,9 +44,9 @@ export async function GET(
     const data = await response.json();
     
     // Find balances
-    const nativeBalance = data.balances.find((b: any) => b.asset_type === 'native');
+    const nativeBalance = data.balances.find((b: { asset_type: string }) => b.asset_type === 'native');
     const usdcBalanceObj = data.balances.find(
-      (b: any) => b.asset_code === 'USDC'
+      (b: { asset_code?: string }) => b.asset_code === 'USDC'
     );
 
     const result: AccountResponse = {

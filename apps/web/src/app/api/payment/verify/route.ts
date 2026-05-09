@@ -16,6 +16,15 @@ interface PaymentProof {
   receiptUrl: string;
 }
 
+interface HorizonOperation {
+  type: string;
+  from?: string;
+  to?: string;
+  amount?: string;
+  asset_type: string;
+  asset_code?: string;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const hash = searchParams.get('hash');
@@ -37,7 +46,9 @@ export async function GET(request: Request) {
 
     const txData = await txResponse.json();
     const opsData = await opsResponse.json();
-    const paymentOp = opsData._embedded.records.find((op: any) => op.type === 'payment' || op.type === 'path_payment_strict_receive');
+    const paymentOp = opsData._embedded.records.find(
+      (op: HorizonOperation) => op.type === 'payment' || op.type === 'path_payment_strict_receive'
+    );
 
     if (!txData.successful) {
       return NextResponse.json({ 
@@ -51,10 +62,10 @@ export async function GET(request: Request) {
       hash,
       verified: true,
       status: 'success',
-      sender: paymentOp ? paymentOp.from : txData.source_account,
-      recipient: paymentOp ? paymentOp.to : '',
-      amount: paymentOp ? paymentOp.amount : '0',
-      asset: paymentOp ? (paymentOp.asset_type === 'native' ? 'XLM' : paymentOp.asset_code) : 'unknown',
+      sender: paymentOp?.from ?? txData.source_account,
+      recipient: paymentOp?.to ?? '',
+      amount: paymentOp?.amount ?? '0',
+      asset: paymentOp ? (paymentOp.asset_type === 'native' ? 'XLM' : paymentOp.asset_code ?? 'other') : 'unknown',
       memo: txData.memo,
       fee: (txData.fee_charged / 10000000).toString(),
       ledger: txData.ledger,
