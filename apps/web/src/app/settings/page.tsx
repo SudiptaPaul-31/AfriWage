@@ -61,11 +61,14 @@ export default function SettingsPage() {
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={twoFa}
                 onClick={() => setTwoFa((value) => !value)}
-                className={`relative h-7 w-12 rounded-full transition-colors ${twoFa ? 'bg-[#1f8f55]' : 'bg-[#d8cebe]'}`}
+                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${twoFa ? 'bg-[#1f8f55]' : 'bg-[#d8cebe]'}`}
               >
                 <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${twoFa ? 'translate-x-6' : 'translate-x-1'}`}
+                  className="absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-200"
+                  style={{ transform: twoFa ? 'translateX(26px)' : 'translateX(4px)' }}
                 />
               </button>
             </div>
