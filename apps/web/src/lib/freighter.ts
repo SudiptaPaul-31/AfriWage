@@ -7,6 +7,12 @@ import {
   signTransaction as freighterSignTransaction,
 } from '@stellar/freighter-api';
 
+declare global {
+  interface Window {
+    freighter?: unknown;
+  }
+}
+
 /**
  * Checks whether the Freighter wallet extension is installed in the browser.
  * Freighter is the official Stellar browser wallet.
