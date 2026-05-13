@@ -2,13 +2,9 @@ import {
   ArrowRight,
   Blocks,
   Clock3,
-  Code2,
   Globe2,
   Landmark,
-  MonitorSmartphone,
   ShieldCheck,
-
-  Wallet2,
   Zap,
 } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -54,24 +50,6 @@ const features = [
     title: 'Verifiable by default',
     description:
       'Every payment can be checked on-chain, with clean proof-of-payment flows for employers and workers.',
-  },
-  {
-    icon: Wallet2,
-    title: 'Treasury-first operations',
-    description:
-      'The dashboard is structured around funding state, payout readiness, and worker settlement confidence.',
-  },
-  {
-    icon: MonitorSmartphone,
-    title: 'Responsive operator flow',
-    description:
-      'Desktop gets a control-room rail while mobile keeps sticky actions and bottom navigation.',
-  },
-  {
-    icon: Code2,
-    title: 'Open SDK and app',
-    description:
-      'The monorepo includes the web app plus @AfriWage/sdk for reusable Stellar payroll helpers.',
   },
 ];
 
@@ -299,9 +277,9 @@ export default function HomePage() {
             <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
               {SUPPORTED_COUNTRIES.map((country) => (
                 <Surface key={country.code} className="p-6 text-center">
-                  <div className="text-4xl leading-none">{country.flag}</div>
+                  <div className="text-5xl leading-none">{country.flag}</div>
                   <p className="mt-4 font-semibold text-[#102033]">{country.name}</p>
-                  <p className="mt-1 font-mono text-sm text-[#1f8f55]">{country.currency}</p>
+                  <p className="mt-1 font-mono text-sm text-[#1f8f55]">{country.flag} {country.currency}</p>
                 </Surface>
               ))}
             </div>
