@@ -1,36 +1,25 @@
 'use client';
 
-// Type definitions for the Freighter browser extension API
-interface FreighterApi {
-  getPublicKey(): Promise<string>;
-  signTransaction(
-    xdr: string,
-    opts?: {
-      network?: string;
-      networkPassphrase?: string;
-      accountToSign?: string;
-    }
-  ): Promise<string>;
-  isConnected(): Promise<boolean>;
-  getNetwork(): Promise<string>;
-  getNetworkDetails(): Promise<{
-    network: string;
-    networkUrl: string;
-    networkPassphrase: string;
-  }>;
-}
+import {
+  isConnected as freighterIsConnected,
+  isAllowed as freighterIsAllowed,
+  requestAccess as freighterRequestAccess,
+  signTransaction as freighterSignTransaction,
+  getNetworkDetails as freighterGetNetworkDetails,
+} from '@stellar/freighter-api';
 
 declare global {
   interface Window {
-    freighter?: FreighterApi;
+    freighter?: any;
   }
 }
 
 /**
  * Checks whether the Freighter wallet extension is installed in the browser.
- * Freighter is the official Stellar browser wallet.
  */
 export function isFreighterInstalled(): boolean {
+  // In v6+, we can check window.freighter directly for synchronous checks
+  // to avoid async flashes, or use the async isConnected() method.
   if (typeof window === 'undefined') return false;
   return typeof window.freighter !== 'undefined';
 }
@@ -43,22 +32,22 @@ export function isFreighterInstalled(): boolean {
  * @throws Error if Freighter is not installed or user rejects
  */
 export async function getPublicKey(): Promise<string> {
-  if (!isFreighterInstalled()) {
+  const { isConnected } = await freighterIsConnected();
+  if (!isConnected) {
     throw new Error(
       'Freighter wallet is not installed. Please install it from https://freighter.app'
     );
   }
 
-  try {
-    const publicKey = await window.freighter?.getPublicKey();
-    if (!publicKey) {
-      throw new Error('No account found in Freighter. Please create or import a Stellar account.');
-    }
-    return publicKey;
-  } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error('Failed to get public key from Freighter');
+  // Request access prompts the user to connect and returns the address
+  const { address, error } = await freighterRequestAccess();
+  if (error) {
+    throw new Error(error.toString());
   }
+  if (!address) {
+    throw new Error('No account found in Freighter. Please create or import a Stellar account.');
+  }
+  return address;
 }
 
 /**
@@ -69,23 +58,23 @@ export async function getPublicKey(): Promise<string> {
  * @throws Error if Freighter is not installed or user rejects
  */
 export async function signTransaction(xdr: string): Promise<string> {
-  if (!isFreighterInstalled()) {
+  const { isConnected } = await freighterIsConnected();
+  if (!isConnected) {
     throw new Error('Freighter wallet is not installed.');
   }
 
-  try {
-    const signedXdr = await window.freighter?.signTransaction(xdr, {
-      network: 'TESTNET',
-      networkPassphrase: 'Test SDF Network ; September 2015',
-    });
-    if (!signedXdr) {
-      throw new Error('Transaction signing failed or was rejected.');
-    }
-    return signedXdr;
-  } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error('Transaction signing was rejected or failed');
+  const { signedTxXdr, error } = await freighterSignTransaction(xdr, {
+    networkPassphrase: 'Test SDF Network ; September 2015',
+  });
+
+  if (error) {
+    throw new Error(error.toString());
   }
+  if (!signedTxXdr) {
+    throw new Error('Transaction signing failed or was rejected.');
+  }
+
+  return signedTxXdr;
 }
 
 /**
@@ -94,11 +83,12 @@ export async function signTransaction(xdr: string): Promise<string> {
  * @returns true if Freighter is installed and connected
  */
 export async function isConnected(): Promise<boolean> {
-  if (!isFreighterInstalled()) return false;
-
   try {
-    const connected = await window.freighter?.isConnected();
-    return !!connected;
+    const { isConnected: installed } = await freighterIsConnected();
+    if (!installed) return false;
+
+    const { isAllowed } = await freighterIsAllowed();
+    return !!isAllowed;
   } catch {
     return false;
   }
@@ -112,17 +102,18 @@ export async function getNetworkDetails(): Promise<{
   network: string;
   networkPassphrase: string;
 }> {
-  if (!isFreighterInstalled()) {
+  const { isConnected } = await freighterIsConnected();
+  if (!isConnected) {
     throw new Error('Freighter wallet is not installed.');
   }
 
-  const details = await window.freighter?.getNetworkDetails();
-  if (!details) {
-    throw new Error('Could not retrieve network details from Freighter.');
+  const result = await freighterGetNetworkDetails();
+  if (result.error) {
+    throw new Error(result.error.toString());
   }
 
   return {
-    network: details.network,
-    networkPassphrase: details.networkPassphrase,
+    network: result.network,
+    networkPassphrase: result.networkPassphrase,
   };
 }

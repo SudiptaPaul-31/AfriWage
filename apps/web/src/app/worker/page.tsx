@@ -1,226 +1,499 @@
 'use client';
 
-import { Clock, Home, MapPin, TrendingUp, Users, Wallet } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  AlertCircle,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronRight,
+  Copy,
+  CheckCircle2,
+  ExternalLink,
+  Home,
+  Search,
+  Users,
+  Wallet2,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
-import { TransactionHistory } from '@/components/TransactionHistory';
-import { WalletConnect } from '@/components/WalletConnect';
-import { truncatePublicKey } from '@/lib/stellar';
-import { SUPPORTED_COUNTRIES } from '@/types';
+import type { Balance, TransactionRecord } from '@/lib/stellar';
+import {
+  formatAmount,
+  getBalance,
+  getTransactionHistory,
+  truncatePublicKey,
+} from '@/lib/stellar';
+import { cn, copyToClipboard } from '@/lib/utils';
+import { isFreighterInstalled, getPublicKey as freighterGetPublicKey } from '@/lib/freighter';
 
-// Worker page — a public payment history passport for a given Stellar address.
-// Workers can share their public key to show their payment history to employers.
+/* ─── SKELETON ─────────────────────────────────────────── */
+
+function Skeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn('animate-pulse rounded-lg bg-[#E5E7EB]', className)} />
+  );
+}
+
+/* ─── PAGE ─────────────────────────────────────────────── */
 
 export default function WorkerPage() {
-  const [publicKey, setPublicKey] = useState<string | null>(null);
-  const [lookupKey, setLookupKey] = useState('');
   const [viewingKey, setViewingKey] = useState<string | null>(null);
+  const [inputKey, setInputKey] = useState('');
+  const [freighterError, setFreighterError] = useState<string | null>(null);
 
-  const handleConnect = useCallback((pk: string) => {
-    setPublicKey(pk);
-    setViewingKey(pk);
-  }, []);
+  const isValidKey = inputKey.startsWith('G') && inputKey.length === 56;
 
-  const handleDisconnect = useCallback(() => {
-    setPublicKey(null);
-    setViewingKey(null);
-  }, []);
-
-  const handleLookup = useCallback(() => {
-    if (lookupKey.trim().length >= 56) {
-      setViewingKey(lookupKey.trim());
+  const handleSubmit = useCallback(() => {
+    if (isValidKey) {
+      setViewingKey(inputKey.trim());
     }
-  }, [lookupKey]);
+  }, [inputKey, isValidKey]);
+
+  const handleFreighterConnect = useCallback(async () => {
+    setFreighterError(null);
+
+    if (!isFreighterInstalled()) {
+      setFreighterError('Freighter wallet is not installed.');
+      return;
+    }
+
+    try {
+      const pk = await freighterGetPublicKey();
+      setInputKey(pk);
+      setViewingKey(pk);
+    } catch (err) {
+      setFreighterError(
+        err instanceof Error ? err.message : 'Failed to connect Freighter'
+      );
+    }
+  }, []);
+
+  const handleClear = useCallback(() => {
+    setViewingKey(null);
+    setInputKey('');
+    setFreighterError(null);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-hero-gradient">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-white/5 bg-stellar-blue/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-white">
+      {/* ── NAVBAR ────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 h-16 border-b border-[#E5E7EB] bg-white">
+        <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="flex items-center gap-2 text-slate-400 transition-colors hover:text-white"
+              className="flex items-center gap-2 text-sm text-[#6B7280] transition-colors hover:text-[#111111]"
             >
               <Home className="h-4 w-4" />
-              <span className="text-sm">Home</span>
+              Home
             </Link>
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
-                <span className="text-xs font-bold text-white">RC</span>
-              </div>
-              <span className="font-semibold text-white">Worker Portal</span>
+              <span className="h-2 w-2 rounded-full bg-[#14A800]" />
+              <span className="font-semibold text-[#111111]">
+                Worker Portal
+              </span>
             </div>
           </div>
-          <WalletConnect onConnect={handleConnect} onDisconnect={handleDisconnect} />
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="hidden text-sm text-[#6B7280] transition-colors hover:text-[#111111] sm:inline"
+            >
+              Dashboard
+            </Link>
+            {viewingKey && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-sm text-[#6B7280] transition-colors hover:bg-[#F9FAFB]"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </nav>
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-gradient shadow-brand-glow">
-            <Users className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white">Worker Payment Passport</h1>
-          <p className="mt-2 text-slate-400">
-            View on-chain payment history for any Stellar account — your transparent proof of work.
-          </p>
-        </div>
-
-        {/* Supported countries */}
-        <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
-            <MapPin className="h-4 w-4" />
-            Supported Off-Ramp Countries
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {SUPPORTED_COUNTRIES.map((country) => (
-              <div
-                key={country.code}
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5"
-              >
-                <span>{country.flag}</span>
-                <span className="text-sm text-slate-300">{country.name}</span>
-                <span className="text-xs text-slate-500">{country.currency}</span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-slate-600">
-            Workers in these countries can automatically off-ramp USDC to local bank accounts or
-            mobile money via integrated Stellar anchors.
-          </p>
-        </div>
-
-        {/* Connect or lookup */}
+      {/* ── MAIN CONTENT ──────────────────────────── */}
+      <main className="mx-auto max-w-3xl px-6 py-10">
         {!viewingKey ? (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-              <Wallet className="mx-auto mb-3 h-8 w-8 text-brand-400" />
-              <h2 className="mb-2 text-lg font-semibold text-white">Connect Your Wallet</h2>
-              <p className="mb-4 text-sm text-slate-400">
-                Connect Freighter to view your own payment history and passport.
-              </p>
-              <WalletConnect onConnect={handleConnect} onDisconnect={handleDisconnect} />
-            </div>
-
-            <div className="relative flex items-center gap-4">
-              <div className="flex-1 border-t border-white/10" />
-              <span className="text-xs text-slate-600">or look up any wallet</span>
-              <div className="flex-1 border-t border-white/10" />
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <label
-                htmlFor="lookup-address"
-                className="mb-2 block text-sm font-medium text-slate-300"
-              >
-                Stellar Address
-              </label>
-              <div className="flex gap-3">
-                <input
-                  id="lookup-address"
-                  type="text"
-                  placeholder="G... Stellar public key"
-                  value={lookupKey}
-                  onChange={(e) => setLookupKey(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-                  className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-sm text-white placeholder-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
-                />
-                <button
-                  type="button"
-                  onClick={handleLookup}
-                  disabled={lookupKey.trim().length < 56}
-                  className="rounded-xl bg-brand-gradient px-5 py-3 text-sm font-semibold text-white disabled:opacity-40"
-                >
-                  Look Up
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-slate-600">
-                Enter any Stellar public key to view their on-chain payment history
-              </p>
-            </div>
-          </div>
+          <EntryState
+            inputKey={inputKey}
+            setInputKey={setInputKey}
+            isValidKey={isValidKey}
+            onSubmit={handleSubmit}
+            onFreighterConnect={handleFreighterConnect}
+            freighterError={freighterError}
+          />
         ) : (
-          <div className="animate-fade-in space-y-6">
-            {/* Passport header */}
-            <div className="rounded-2xl border border-brand-500/30 bg-brand-500/5 p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-brand-500">
-                    Payment Passport
-                  </p>
-                  <p className="mt-1 font-mono text-sm text-slate-300">
-                    {truncatePublicKey(viewingKey, 12)}
-                  </p>
-                  {publicKey === viewingKey && (
-                    <p className="mt-1 text-xs text-slate-500">Your connected wallet</p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-3 py-1.5">
-                    <TrendingUp className="h-3.5 w-3.5 text-green-400" />
-                    <span className="text-xs font-medium text-green-400">On-chain verified</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewingKey(null);
-                      setLookupKey('');
-                    }}
-                    className="text-xs text-slate-500 hover:text-slate-300"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-
-              {/* Passport stats row */}
-              <div className="mt-4 grid grid-cols-3 gap-4 border-t border-white/10 pt-4">
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Network</p>
-                  <p className="mt-0.5 text-sm font-semibold text-white">Stellar Testnet</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Asset</p>
-                  <p className="mt-0.5 text-sm font-semibold text-white">USDC</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Settlement</p>
-                  <p className="mt-0.5 text-sm font-semibold text-white">~5 seconds</p>
-                </div>
-              </div>
-            </div>
-
-            {/* How off-ramp works */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-                <Clock className="h-4 w-4 text-brand-400" />
-                How Your Off-Ramp Works
-              </h2>
-              <ol className="space-y-3">
-                {[
-                  'Employer sends USDC to your Stellar public key',
-                  'USDC lands in your Stellar wallet within 5 seconds',
-                  'Your connected anchor automatically converts USDC to local currency',
-                  'Funds arrive in your bank account or mobile money wallet',
-                ].map((step, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-slate-400">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/20 text-xs font-bold text-brand-400">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-
-            {/* Transaction history */}
-            <TransactionHistory publicKey={viewingKey} />
-          </div>
+          <WorkerPassport
+            publicKey={viewingKey}
+            onClear={handleClear}
+          />
         )}
       </main>
+    </div>
+  );
+}
+
+/* ─── STATE 1: ENTRY ───────────────────────────────────── */
+
+function EntryState({
+  inputKey,
+  setInputKey,
+  isValidKey,
+  onSubmit,
+  onFreighterConnect,
+  freighterError,
+}: {
+  inputKey: string;
+  setInputKey: (v: string) => void;
+  isValidKey: boolean;
+  onSubmit: () => void;
+  onFreighterConnect: () => void;
+  freighterError: string | null;
+}) {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+      <Users className="mx-auto h-16 w-16 text-[#E5E7EB]" />
+
+      <h1 className="mt-6 text-2xl font-bold text-[#111111]">
+        Worker Payment Passport
+      </h1>
+      <p className="mx-auto mt-3 max-w-sm text-[#6B7280]">
+        Enter a Stellar public key to view on-chain payment history — your
+        verifiable proof of work.
+      </p>
+
+      {/* Address input */}
+      <div className="mt-8 w-full max-w-lg">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <input
+              type="text"
+              value={inputKey}
+              onChange={(e) => setInputKey(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+              placeholder="Enter Worker Stellar Public Key (G...)"
+              className="h-12 w-full rounded-lg border border-[#E5E7EB] bg-white pl-10 pr-4 font-mono text-sm text-[#111111] placeholder-[#6B7280] outline-none transition-colors focus:border-[#14A800]/50"
+            />
+            {isValidKey && (
+              <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#14A800]" />
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={!isValidKey}
+            className="h-12 shrink-0 rounded-lg bg-[#14A800] px-6 font-semibold text-white transition-colors hover:bg-[#108A00] disabled:opacity-40"
+          >
+            Verify Key
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="flex-1 border-t border-[#E5E7EB]" />
+          <span className="text-xs text-[#6B7280]">or</span>
+          <div className="flex-1 border-t border-[#E5E7EB]" />
+        </div>
+
+        {/* Freighter connect */}
+        <button
+          type="button"
+          onClick={onFreighterConnect}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-[#E5E7EB] font-semibold text-[#111111] transition-colors hover:bg-[#F9FAFB]"
+        >
+          <Wallet2 className="h-4 w-4" />
+          Connect Freighter Wallet
+        </button>
+
+        {freighterError && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {freighterError}
+          </div>
+        )}
+
+        <a
+          href="https://www.freighter.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 block text-sm text-[#6B7280] underline transition-colors hover:text-[#111111]"
+        >
+          Don&apos;t have Freighter? Download it free →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/* ─── STATE 2: WORKER PASSPORT ─────────────────────────── */
+
+function WorkerPassport({
+  publicKey,
+  onClear,
+}: {
+  publicKey: string;
+  onClear: () => void;
+}) {
+  const [addressCopied, setAddressCopied] = useState(false);
+
+  const {
+    data: balance,
+    isLoading: balanceLoading,
+    error: balanceError,
+  } = useQuery<Balance>({
+    queryKey: ['account', publicKey],
+    queryFn: () => getBalance(publicKey),
+    enabled: !!publicKey,
+    refetchInterval: 30000,
+    retry: 1,
+  });
+
+  const {
+    data: transactions,
+    isLoading: txLoading,
+  } = useQuery<TransactionRecord[]>({
+    queryKey: ['transactions', publicKey],
+    queryFn: () => getTransactionHistory(publicKey),
+    enabled: !!publicKey,
+  });
+
+  const accountExists = !balanceError;
+  const accountActive =
+    balance && balance.xlm !== '0' && balance.xlm !== '0.0000000';
+
+  const handleCopyAddress = async () => {
+    const ok = await copyToClipboard(publicKey);
+    if (ok) {
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* ── PASSPORT HEADER ───────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#14A800]">
+            PAYMENT PASSPORT
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-[#111111]">
+            Worker Profile
+          </h1>
+          <div className="mt-2 flex items-center gap-2">
+            <p className="font-mono text-sm text-[#6B7280]">
+              {truncatePublicKey(publicKey, 8)}
+            </p>
+            <button
+              type="button"
+              onClick={handleCopyAddress}
+              className="text-[#6B7280] transition-colors hover:text-[#111111]"
+            >
+              {addressCopied ? (
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#14A800]" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </button>
+            <a
+              href={`https://stellar.expert/explorer/testnet/account/${publicKey}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#6B7280] transition-colors hover:text-[#111111]"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClear}
+          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm text-[#6B7280] transition-colors hover:bg-[#F9FAFB]"
+        >
+          <X className="h-3.5 w-3.5" />
+          Clear
+        </button>
+      </div>
+
+      {/* ── UNFUNDED ACCOUNT ──────────────────────── */}
+      {!balanceLoading && !accountExists && (
+        <div className="rounded-xl border border-[#FED7AA] bg-[#FFF7ED] p-8 text-center">
+          <Wallet2 className="mx-auto h-12 w-12 text-[#FED7AA]" />
+          <h2 className="mt-4 text-lg font-semibold text-[#92400E]">
+            Unfunded Account
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-[#B45309]">
+            This Stellar address has not been funded yet. The account needs to
+            receive XLM before it can hold USDC or appear on-chain.
+          </p>
+          <a
+            href={`https://stellar.expert/explorer/testnet/account/${publicKey}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-[#B45309] underline"
+          >
+            Check on Explorer
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      )}
+
+      {/* ── BALANCE CARDS ─────────────────────────── */}
+      {(balanceLoading || accountExists) && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {balanceLoading ? (
+            <>
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </>
+          ) : balance ? (
+            <>
+              {/* USDC */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#6B7280]">
+                  USDC Balance
+                </p>
+                <p className="mt-2 text-3xl font-bold text-[#111111]">
+                  {formatAmount(balance.usdc, '')}
+                </p>
+                <p className="mt-1 text-sm text-[#6B7280]">USD Coin</p>
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] px-3 py-1 text-xs font-medium text-[#14A800]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#14A800]" />
+                  {accountActive ? 'Active' : 'Zero balance'}
+                </span>
+              </div>
+
+              {/* XLM */}
+              <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#6B7280]">
+                  XLM Balance
+                </p>
+                <p className="mt-2 text-3xl font-bold text-[#111111]">
+                  {formatAmount(balance.xlm, '')}
+                </p>
+                <p className="mt-1 text-sm text-[#6B7280]">
+                  Stellar Lumens · Gas fees
+                </p>
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
+
+      {/* ── PAYMENT HISTORY ───────────────────────── */}
+      {(txLoading || accountExists) && (
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
+          <h3 className="mb-6 text-lg font-semibold text-[#111111]">
+            Payment History
+          </h3>
+
+          {txLoading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 border-b border-[#E5E7EB] py-4 last:border-0"
+                >
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              ))}
+            </div>
+          ) : (transactions ?? []).length === 0 ? (
+            <div className="rounded-xl bg-[#F9FAFB] p-8 text-center">
+              <p className="text-sm text-[#6B7280]">
+                No payment history found for this address.
+              </p>
+            </div>
+          ) : (
+            <div>
+              {(transactions ?? []).map((tx, idx) => {
+                const incoming = tx.to === publicKey;
+                const date = new Date(tx.createdAt).toLocaleDateString(
+                  'en-US',
+                  { month: 'short', day: 'numeric', year: 'numeric' }
+                );
+                const time = new Date(tx.createdAt).toLocaleTimeString(
+                  'en-US',
+                  { hour: '2-digit', minute: '2-digit', hour12: false }
+                );
+
+                return (
+                  <a
+                    key={tx.id}
+                    href={`https://stellar.expert/explorer/testnet/tx/${tx.hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      'flex items-center justify-between rounded-lg px-2 py-4 transition-colors hover:bg-[#F9FAFB]',
+                      idx < (transactions ?? []).length - 1 &&
+                        'border-b border-[#E5E7EB]'
+                    )}
+                  >
+                    {/* Left */}
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={cn(
+                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+                          incoming ? 'bg-[#F0FDF4]' : 'bg-[#FFF1F2]'
+                        )}
+                      >
+                        {incoming ? (
+                          <ArrowDownLeft className="h-5 w-5 text-[#14A800]" />
+                        ) : (
+                          <ArrowUpRight className="h-5 w-5 text-[#E24B4A]" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#111111]">
+                          {tx.memo || 'Payment'}
+                        </p>
+                        <p className="text-xs text-[#6B7280]">
+                          {date} · {time}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right */}
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p
+                          className={cn(
+                            'text-sm font-semibold',
+                            incoming ? 'text-[#14A800]' : 'text-[#E24B4A]'
+                          )}
+                        >
+                          {incoming ? '+' : '-'}
+                          {tx.amount} {tx.asset}
+                        </p>
+                        <p className="font-mono text-xs text-[#6B7280]">
+                          {truncatePublicKey(
+                            incoming ? tx.from : tx.to,
+                            4
+                          )}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-[#E5E7EB]" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

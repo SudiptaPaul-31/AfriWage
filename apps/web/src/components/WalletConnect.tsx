@@ -40,12 +40,6 @@ export function WalletConnect({ onConnect, onDisconnect, className }: WalletConn
   }, [onConnect]);
 
   const handleConnect = useCallback(async () => {
-    if (!isFreighterInstalled()) {
-      setError('Freighter wallet not installed. Download it at freighter.app');
-      setStatus('error');
-      return;
-    }
-
     setStatus('connecting');
     setError(null);
 
@@ -159,10 +153,10 @@ export function WalletConnect({ onConnect, onDisconnect, className }: WalletConn
         onClick={handleConnect}
         disabled={status === 'connecting'}
         className={cn(
-          'flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200',
+          'flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200',
           status === 'connecting'
-            ? 'cursor-wait bg-brand-gradient opacity-70'
-            : 'bg-brand-gradient text-white shadow-brand-glow hover:scale-105 hover:shadow-lg'
+            ? 'cursor-wait bg-[#14A800]/70 text-white'
+            : 'bg-[#14A800] text-white hover:bg-[#108A00]'
         )}
         aria-label="Connect Freighter wallet"
       >
