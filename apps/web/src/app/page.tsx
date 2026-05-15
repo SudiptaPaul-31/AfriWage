@@ -1,376 +1,364 @@
 import {
+  ArrowRight,
+  Blocks,
+  Clock3,
+  Globe2,
+  Landmark,
+  ShieldCheck,
   Zap,
-  Globe,
-  Shield,
-  Wallet,
-  Code2,
-  Users,
-  Wallet2,
-  SendHorizonal,
-  CheckCircle2,
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
+import { SUPPORTED_COUNTRIES } from '@/types';
 
 export const metadata: Metadata = {
-  title: 'AfriWage — Pay Your African Team Instantly',
+  title: 'AfriWage - Pay Your African Team',
   description:
-    'AfriWage sends USDC over Stellar directly to gig workers across Africa. Workers receive local currency. No banks. No delays. No markup.',
+    'Send USDC via Stellar directly to local bank accounts or mobile money wallets in Africa with near-zero fees and instant settlement.',
 };
 
-/* ─── DATA ─────────────────────────────────────────────── */
+const navLinks = [
+  { label: 'Platform', href: '#platform' },
+  { label: 'Flow', href: '#flow' },
+  { label: 'Countries', href: '#countries' },
 
-const steps = [
-  {
-    num: '01',
-    Icon: Wallet2,
-    title: 'Connect your wallet',
-    body: 'Install Freighter and connect your Stellar wallet in seconds. No account creation. No KYC.',
-    accent: false,
-  },
-  {
-    num: '02',
-    Icon: SendHorizonal,
-    title: 'Send USDC',
-    body: 'Enter your worker\u2019s Stellar address and amount. Review the live NGN, GHS, or KES conversion before confirming.',
-    accent: false,
-  },
-  {
-    num: '03',
-    Icon: CheckCircle2,
-    title: 'Worker receives local currency',
-    body: 'Settlement completes on Stellar in under 5 seconds. The anchor delivers local currency to the worker\u2019s account.',
-    accent: true,
-  },
+];
+
+const stats = [
+  { value: '< 5s', label: 'Avg settlement time' },
+  { value: '~$0.0001', label: 'Network fee per transfer' },
+  { value: '8+', label: 'African payout corridors' },
+  { value: '99%+', label: 'Operational visibility' },
 ];
 
 const features = [
   {
-    Icon: Zap,
+    icon: Zap,
     title: 'Instant settlement',
-    body: 'USDC settles on Stellar in under 5 seconds. No 3-day wire windows.',
+    description:
+      'USDC payroll settles on Stellar in seconds instead of multi-day wire transfer windows.',
   },
   {
-    Icon: Globe,
-    title: '8 African corridors',
-    body: 'NGN, GHS, KES, ZAR, TZS, UGX, XOF, XAF. Local currency delivered via anchor rails.',
+    icon: Globe2,
+    title: 'Local currency delivery',
+    description:
+      'Workers receive value through local payout rails across NGN, GHS, KES, ZAR, TZS, UGX, XOF, and XAF corridors.',
   },
   {
-    Icon: Shield,
-    title: 'Verifiable on-chain',
-    body: 'Every payment has a Stellar transaction hash. Verify any payment in seconds.',
-  },
-  {
-    Icon: Wallet,
-    title: 'Non-custodial',
-    body: 'Your keys stay in Freighter. AfriWage never holds your funds.',
-  },
-  {
-    Icon: Code2,
-    title: 'Open source SDK',
-    body: '@afriwage/sdk wraps Stellar helpers for balances, payments, and account ops.',
-  },
-  {
-    Icon: Users,
-    title: 'Worker passport',
-    body: 'Every worker has a shareable payment history. Proof of international work, on-chain.',
+    icon: ShieldCheck,
+    title: 'Verifiable by default',
+    description:
+      'Every payment can be checked on-chain, with clean proof-of-payment flows for employers and workers.',
   },
 ];
 
-const corridors = [
-  { flag: '🇳🇬', country: 'Nigeria', code: 'NGN' },
-  { flag: '🇬🇭', country: 'Ghana', code: 'GHS' },
-  { flag: '🇰🇪', country: 'Kenya', code: 'KES' },
-  { flag: '🇿🇦', country: 'South Africa', code: 'ZAR' },
-  { flag: '🇹🇿', country: 'Tanzania', code: 'TZS' },
-  { flag: '🇺🇬', country: 'Uganda', code: 'UGX' },
-  { flag: '🇸🇳', country: 'Senegal', code: 'XOF' },
-  { flag: '🇨🇲', country: 'Cameroon', code: 'XAF' },
+const flowSteps = [
+  'Employer funds treasury in USDC and reviews worker payout readiness.',
+  'AfriWage routes the payroll instruction through the Stellar network.',
+  'Settlement completes in seconds with a visible transaction record.',
+  'Local payout rails handle delivery into the worker’s preferred corridor.',
 ];
 
-/* ─── PAGE ─────────────────────────────────────────────── */
+
+
+const faqs = [
+  {
+    question: 'Which countries are represented in the product?',
+    answer:
+      'The current codebase exposes payout corridors for Nigeria, Ghana, Kenya, South Africa, Tanzania, Uganda, Senegal, and Cameroon.',
+  },
+  {
+    question: 'What wallets work with AfriWage today?',
+    answer:
+      'The implemented wallet flow in this repo is built around the Freighter browser extension for Stellar accounts.',
+  },
+  {
+    question: 'Is the current app on mainnet or testnet?',
+    answer:
+      'This project is currently wired for Stellar testnet. The README, environment defaults, and SDK constants all point to testnet infrastructure.',
+  },
+  {
+    question: 'What is included for developers?',
+    answer:
+      'The repository includes the Next.js frontend, worker portal, dashboard flows, and a standalone SDK package with Stellar account and payment helpers.',
+  },
+];
+
+function Surface({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-[28px] border border-[#eadfce] bg-white shadow-[0_22px_50px_rgba(16,32,51,0.06)] ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      {/* ── NAVBAR ────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 h-16 border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-6">
-          {/* Left */}
-          <Link href="/" className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#14A800]" />
-            <span className="text-lg font-bold text-[#111111]">AfriWage</span>
+    <div className="min-h-screen bg-[#f6efe6] text-[#102033]">
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[-10rem] top-[-8rem] h-96 w-96 rounded-full bg-[#f2b94b]/18 blur-3xl" />
+        <div className="absolute right-[-10rem] top-20 h-[28rem] w-[28rem] rounded-full bg-[#1f8f55]/12 blur-3xl" />
+        <div className="absolute bottom-[-6rem] left-1/3 h-80 w-80 rounded-full bg-[#e97b63]/10 blur-3xl" />
+      </div>
+
+      <nav className="sticky top-0 z-40 border-b border-[#e7dccb] bg-white">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#102033] text-white">
+              <span className="font-display text-lg font-semibold">A</span>
+            </div>
+            <div>
+              <p className="font-display text-lg font-semibold">AfriWage</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">Payroll operations</p>
+            </div>
           </Link>
 
-          {/* Center nav links — hidden on mobile */}
-          <div className="hidden items-center gap-8 md:flex">
-            {['Platform', 'How It Works', 'Corridors', 'Developers'].map(
-              (label) => (
-                <a
-                  key={label}
-                  href={`#${label.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="text-sm text-[#6B7280] transition-colors duration-150 hover:text-[#111111]"
-                >
-                  {label}
-                </a>
-              ),
-            )}
+          <div className="hidden items-center gap-8 lg:flex">
+            {navLinks.map((link) => (
+              <a key={link.label} href={link.href} className="text-sm font-medium text-[#637085] transition-colors hover:text-[#102033]">
+                {link.label}
+              </a>
+            ))}
           </div>
 
-          {/* Right */}
           <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/AfriWage/AfriWage"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden rounded-lg border border-[#E5E7EB] px-6 py-2 text-sm font-semibold text-[#111111] transition-colors duration-150 hover:bg-[#F9FAFB] sm:inline-flex"
+            <Link
+              href="/worker"
+              className="hidden rounded-full border border-[#d8cebe] bg-white px-4 py-2.5 text-sm font-semibold text-[#102033] sm:inline-flex"
             >
-              View on GitHub
-            </a>
+              Worker portal
+            </Link>
             <Link
               href="/dashboard"
-              className="rounded-lg bg-[#14A800] px-6 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#108A00]"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1f8f55] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_36px_rgba(31,143,85,0.24)]"
             >
-              Launch App
+              Launch dashboard
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── HERO ──────────────────────────────────── */}
-      <section id="platform" className="bg-[#0A0A0A] pb-24 pt-32">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          {/* Pill badge */}
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#14A800]/30 bg-[#14A800]/10 px-4 py-1.5 text-xs font-semibold text-[#14A800]">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#14A800]" />
-            Live on Stellar Testnet
-          </div>
-
-          {/* H1 */}
-          <h1 className="text-5xl font-bold leading-tight tracking-tight text-white md:text-6xl">
-            Pay your African team.
-            <br />
-            <span className="text-[#14A800]">Instantly.</span>
-          </h1>
-
-          {/* Body */}
-          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/60">
-            AfriWage sends USDC over Stellar directly to gig workers across
-            Africa. Workers receive local currency. No banks. No delays. No
-            markup.
-          </p>
-
-          {/* CTAs */}
-          <div className="mt-10 flex items-center justify-center gap-4">
-            <Link
-              href="/dashboard"
-              className="rounded-lg bg-[#14A800] px-6 py-3 font-semibold text-white transition-colors duration-150 hover:bg-[#108A00]"
-            >
-              Launch App →
-            </Link>
-            <a
-              href="https://github.com/AfriWage/AfriWage"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg border border-white/30 px-6 py-3 font-semibold text-white transition-colors duration-150 hover:bg-white/10"
-            >
-              View on GitHub
-            </a>
-          </div>
-
-          {/* Trust row */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-white/40">
-            <span>✓ Free on testnet</span>
-            <span>✓ Open source MIT</span>
-            <span>✓ Non-custodial</span>
-          </div>
-
-          {/* Stats row */}
-          <div className="mx-auto mt-16 grid max-w-lg grid-cols-3 gap-8 border-t border-white/10 pt-12">
-            {[
-              { value: '< 5s', label: 'Settlement time' },
-              { value: '~$0.0001', label: 'Per transfer fee' },
-              { value: '8', label: 'African corridors' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl font-bold text-white">{stat.value}</p>
-                <p className="mt-1 text-sm text-white/50">{stat.label}</p>
+      <main>
+        <section className="px-4 pb-12 pt-10 sm:px-6 lg:px-8 lg:pb-16 lg:pt-16">
+          <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <Surface className="overflow-hidden bg-[linear-gradient(135deg,#102033_0%,#18324c_54%,#1f8f55_160%)] p-7 text-white sm:p-10">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/72">
+                <Clock3 className="h-4 w-4" />
+                Live on Stellar testnet
               </div>
+              <h1 className="mt-6 max-w-4xl font-display text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+                Run African payroll from one calm, visible operations system.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-white/76 sm:text-lg">
+                AfriWage helps global employers send USDC over Stellar, manage treasury,
+                track worker readiness, and route value into local African payout corridors.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/dashboard"
+                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#102033]"
+                >
+                  Open operations dashboard
+                </Link>
+                <Link
+                  href="/worker"
+                  className="rounded-full border border-white/16 px-5 py-3 font-semibold text-white"
+                >
+                  Open worker portal
+                </Link>
+              </div>
+            </Surface>
+
+            <Surface className="bg-[#fff8ef] p-6 sm:p-8">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">Operator snapshot</p>
+              <div className="mt-6 space-y-4">
+                <div className="rounded-[24px] bg-white p-5 shadow-[0_10px_30px_rgba(16,32,51,0.05)]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-[#637085]">Treasury available</p>
+                      <p className="mt-2 font-display text-3xl font-semibold text-[#102033]">$124,500</p>
+                    </div>
+                    <div className="rounded-2xl bg-[#dff3e8] p-3 text-[#1f8f55]">
+                      <Landmark className="h-5 w-5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-[24px] border border-[#eadfce] bg-white p-5">
+                    <p className="text-sm text-[#637085]">Workers ready</p>
+                    <p className="mt-2 font-display text-2xl font-semibold text-[#102033]">184</p>
+                    <p className="mt-2 text-sm text-[#637085]">Across active corridors</p>
+                  </div>
+                  <div className="rounded-[24px] border border-[#eadfce] bg-white p-5">
+                    <p className="text-sm text-[#637085]">Avg settlement</p>
+                    <p className="mt-2 font-display text-2xl font-semibold text-[#102033]">4.1s</p>
+                    <p className="mt-2 text-sm text-[#637085]">From approval to confirmation</p>
+                  </div>
+                </div>
+
+                <div className="rounded-[24px] border border-[#eadfce] bg-[#102033] p-5 text-white">
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/56">Next action</p>
+                  <p className="mt-3 font-display text-2xl font-semibold">Send today&apos;s payroll batch</p>
+                  <p className="mt-2 text-sm text-white/72">28 contractors are queued for disbursement.</p>
+                </div>
+              </div>
+            </Surface>
+          </div>
+        </section>
+
+        <section className="px-4 pb-8 sm:px-6 lg:px-8" id="platform">
+          <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => (
+              <Surface key={stat.label} className="p-6">
+                <p className="font-display text-3xl font-semibold text-[#102033]">{stat.value}</p>
+                <p className="mt-2 text-sm text-[#637085]">{stat.label}</p>
+              </Surface>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────── */}
-      <section id="how-it-works" className="bg-white py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-[#14A800]">
-            HOW IT WORKS
-          </p>
-          <h2 className="text-center text-3xl font-bold text-[#111111] md:text-4xl">
-            Three steps. Zero banks.
-          </h2>
-          <p className="mx-auto mb-16 mt-4 max-w-xl text-center text-[#6B7280]">
-            From your wallet to your worker&apos;s bank account in seconds.
-          </p>
+        <section className="px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">Platform</p>
+              <h2 className="mt-3 font-display text-4xl font-semibold text-[#102033]">
+                Designed around what payroll operators actually do
+              </h2>
+              <p className="mt-4 text-base leading-7 text-[#637085]">
+                The landing page now matches the product itself: treasury-first, operational, and
+                deliberately structured around payment confidence rather than generic startup sections.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {steps.map((step) => (
-              <div
-                key={step.num}
-                className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-8"
-              >
-                <p className="mb-6 text-4xl font-bold text-[#14A800]">
-                  {step.num}
-                </p>
-                <step.Icon
-                  className={`mb-4 h-8 w-8 ${step.accent ? 'text-[#14A800]' : 'text-[#111111]'}`}
-                />
-                <h3 className="text-lg font-semibold text-[#111111]">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-base leading-relaxed text-[#6B7280]">
-                  {step.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ──────────────────────────────── */}
-      <section id="features" className="bg-[#F9FAFB] py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-[#14A800]">
-            FEATURES
-          </p>
-          <h2 className="mb-16 text-center text-3xl font-bold text-[#111111] md:text-4xl">
-            Everything payroll needs. Nothing it doesn&apos;t.
-          </h2>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-xl border border-[#E5E7EB] bg-white p-6"
-              >
-                <f.Icon className="mb-4 h-6 w-6 text-[#14A800]" />
-                <h3 className="mb-2 text-base font-semibold text-[#111111]">
-                  {f.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-[#6B7280]">
-                  {f.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CORRIDORS ─────────────────────────────── */}
-      <section id="corridors" className="bg-white py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-[#14A800]">
-            SUPPORTED CORRIDORS
-          </p>
-          <h2 className="text-center text-3xl font-bold text-[#111111] md:text-4xl">
-            8 African payout corridors
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-[#6B7280]">
-            More being added. PRs welcome.
-          </p>
-
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {corridors.map((c) => (
-              <div
-                key={c.code}
-                className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-6 text-center"
-              >
-                <p className="mb-3 text-3xl">{c.flag}</p>
-                <p className="text-sm font-semibold text-[#111111]">
-                  {c.country}
-                </p>
-                <p className="mt-1 text-xs text-[#6B7280]">{c.code}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER ────────────────────────────────── */}
-      <footer className="border-t border-white/10 bg-[#0A0A0A] py-12">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 md:grid-cols-3">
-          {/* Left */}
-          <div>
-            <p className="text-lg font-bold text-white">AfriWage</p>
-            <p className="mt-2 text-sm text-white/50">
-              Borderless payroll for African teams.
-            </p>
-            <p className="mt-4 text-xs text-white/30">
-              Built on Stellar · MIT License
-            </p>
-          </div>
-
-          {/* Middle — Product */}
-          <div>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-white/40">
-              PRODUCT
-            </p>
-            <ul className="space-y-3">
-              {[
-                { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Worker Portal', href: '/worker' },
-                { label: 'Send Payment', href: '/send' },
-                { label: 'Receipt Lookup', href: '/transactions' },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-white/60 transition-colors duration-150 hover:text-white"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
+            <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {features.map((feature) => (
+                <Surface key={feature.title} className="p-7">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#dff3e8] text-[#1f8f55]">
+                    <feature.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-5 font-display text-2xl font-semibold text-[#102033]">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#637085]">{feature.description}</p>
+                </Surface>
               ))}
-            </ul>
+            </div>
           </div>
+        </section>
 
-          {/* Right — Community */}
-          <div>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-white/40">
-              COMMUNITY
-            </p>
-            <ul className="space-y-3">
-              {[
-                {
-                  label: 'GitHub',
-                  href: 'https://github.com/AfriWage/AfriWage',
-                },
-                {
-                  label: 'GitBook Docs',
-                  href: 'https://k1ngd4vid.gitbook.io/afriwage-docs',
-                },
-                { label: 'Telegram', href: 'https://t.me/afriwage' },
-                { label: 'Stellar.org', href: 'https://stellar.org' },
-              ].map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-white/60 transition-colors duration-150 hover:text-white"
-                  >
-                    {link.label}
-                  </a>
-                </li>
+        <section className="px-4 py-14 sm:px-6 lg:px-8" id="countries">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">Corridors</p>
+                <h2 className="mt-3 font-display text-4xl font-semibold text-[#102033]">
+                  Supported payout corridors
+                </h2>
+                <p className="mt-4 text-base leading-7 text-[#637085]">
+                  The current product model exposes eight African countries and local currencies for off-ramp flows.
+                </p>
+              </div>
+              <Surface className="bg-[#fff8ef] px-6 py-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">Active</p>
+                <p className="mt-2 font-display text-3xl font-semibold text-[#102033]">8 corridors</p>
+              </Surface>
+            </div>
+
+            <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+              {SUPPORTED_COUNTRIES.map((country) => (
+                <Surface key={country.code} className="p-6 text-center">
+                  <div className="text-5xl leading-none">{country.flag}</div>
+                  <p className="mt-4 font-semibold text-[#102033]">{country.name}</p>
+                  <p className="mt-1 font-mono text-sm text-[#1f8f55]">{country.flag} {country.currency}</p>
+                </Surface>
               ))}
-            </ul>
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* Bottom bar */}
-        <div className="mx-auto mt-12 max-w-6xl border-t border-white/10 px-6 pt-8 text-center text-xs text-white/30">
-          © 2025 AfriWage · Open source under MIT License
+        <section className="px-4 py-14 sm:px-6 lg:px-8" id="flow">
+          <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[1fr_0.95fr]">
+            <Surface className="p-7 sm:p-8">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">Flow</p>
+              <h2 className="mt-3 font-display text-4xl font-semibold text-[#102033]">
+                Settlement flow, without ambiguity
+              </h2>
+              <div className="mt-8 space-y-5">
+                {flowSteps.map((step, index) => (
+                  <div key={step} className="flex gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#102033] text-sm font-semibold text-white">
+                      0{index + 1}
+                    </div>
+                    <p className="pt-2 text-sm leading-7 text-[#637085]">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="overflow-hidden bg-[linear-gradient(135deg,#fffdf8_0%,#fff7ec_100%)] p-7 sm:p-8">
+              <div className="flex items-center gap-3 text-[#8c7760]">
+                <Blocks className="h-5 w-5" />
+                <p className="text-xs uppercase tracking-[0.18em]">Operational model</p>
+              </div>
+              <div className="mt-6 space-y-4 font-mono text-sm leading-7 text-[#102033]">
+                <div className="rounded-[22px] border border-[#eadfce] bg-white px-5 py-4">[Employer Treasury]</div>
+                <div className="pl-6 text-[#637085]">| send USDC payroll</div>
+                <div className="rounded-[22px] border border-[#eadfce] bg-white px-5 py-4">[Stellar Network]</div>
+                <div className="pl-6 text-[#637085]">| settle in 3 to 5 seconds</div>
+                <div className="rounded-[22px] border border-[#eadfce] bg-white px-5 py-4">[Anchor / Off-ramp Rail]</div>
+                <div className="pl-6 text-[#637085]">| deliver to local account or wallet</div>
+                <div className="rounded-[22px] border border-[#eadfce] bg-white px-5 py-4">[Worker Destination]</div>
+              </div>
+            </Surface>
+          </div>
+        </section>
+
+
+
+        <section className="px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-4xl">
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8c7760]">FAQ</p>
+              <h2 className="mt-3 font-display text-4xl font-semibold text-[#102033]">
+                Answers grounded in the current repo
+              </h2>
+            </div>
+
+            <div className="mt-10 space-y-4">
+              {faqs.map((faq, index) => (
+                <details key={faq.question} className="overflow-hidden rounded-[24px] border border-[#eadfce] bg-white px-6" open={index === 0}>
+                  <summary className="cursor-pointer list-none py-5 font-semibold text-[#102033]">
+                    {faq.question}
+                  </summary>
+                  <div className="pb-5 text-sm leading-7 text-[#637085]">{faq.answer}</div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-[#e7dccb] bg-[#fffaf2] px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-display text-2xl font-semibold text-[#102033]">AfriWage</p>
+            <p className="mt-2 text-sm text-[#637085]">Borderless payroll for African teams, built on Stellar testnet infrastructure.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-5 text-sm font-medium text-[#637085]">
+            <Link href="/dashboard" className="hover:text-[#102033]">Dashboard</Link>
+            <Link href="/worker" className="hover:text-[#102033]">Worker Portal</Link>
+            <a href="https://github.com/AfriWage/AfriWage" target="_blank" rel="noopener noreferrer" className="hover:text-[#102033]">GitHub</a>
+          </div>
         </div>
       </footer>
     </div>
